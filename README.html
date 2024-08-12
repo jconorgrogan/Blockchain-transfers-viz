@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Transaction Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+        #legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+        #animation {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="legend"></div>
+        <svg id="animation" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1200 600">
+            <!-- Background -->
+            <rect width="100%" height="100%" fill="#f0f0f0"/>
+            
+            <!-- 2012 Section -->
+            <g id="section2012">
+                <rect x="0" y="0" width="1200" height="180" fill="#e6f3ff"/>
+                <text x="600" y="30" text-anchor="middle" font-size="20" fill="#333">2012</text>
+                <text x="600" y="60" text-anchor="middle" font-size="16" fill="#666">~0.32 transactions per second</text>
+                <text x="140" y="120" text-anchor="end" font-size="16" font-weight="bold" fill="#333">Bitcoin</text>
+                <rect id="flow2012" x="160" y="90" width="1020" height="60" fill="none" stroke="#1f77b4" stroke-width="2"/>
+            </g>
+            
+            <!-- 2024 Section -->
+            <g id="section2024">
+                <rect x="0" y="200" width="1200" height="400" fill="#fff2e6"/>
+                <text x="600" y="230" text-anchor="middle" font-size="20" fill="#333">2024</text>
+                <text x="600" y="260" text-anchor="middle" font-size="16" fill="#666">~1,427 transactions per second</text>
+            </g>
+        </svg>
+    </div>
+
+    <script>
+        const svg = document.getElementById('animation');
+        const flow2012 = document.getElementById('flow2012');
+        const legend = document.getElementById('legend');
+        const section2024 = document.getElementById('section2024');
+
+        const totalTPS2024 = 1427;
+
+        // Blockchain colors and percentages for 2024
+        const blockchains2024 = [
+            { name: "Solana", color: "#B19CD9", percentage: 71.17, tps: totalTPS2024 * 0.7117 },
+            { name: "EVM", color: "#00008B", percentage: 22.13, tps: totalTPS2024 * 0.2213, subChains: [
+                { name: "EVM (non-Base)", color: "#00008B", percentage: 0.84 },
+                { name: "Base", color: "#5470FF", percentage: 0.16 }
+            ]},
+            { name: "Tron", color: "#FF0013", percentage: 4.47, tps: totalTPS2024 * 0.0447 },
+            { name: "Bitcoin", color: "#ff9900", percentage: 0.31, tps: totalTPS2024 * 0.0031 },
+            { name: "Other", color: "#808080", percentage: 1.92, tps: totalTPS2024 * 0.0192 }
+        ];
+
+        // Create 2024 sections
+        const startY = 290;
+        const availableHeight = 300;
+        const rowHeight = availableHeight / blockchains2024.length;
+        const rowPadding = rowHeight * 0.2;
+
+        blockchains2024.forEach((chain, index) => {
+            const y = startY + index * rowHeight;
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "160");
+            rect.setAttribute("y", y + rowPadding / 2);
+            rect.setAttribute("width", "1020");
+            rect.setAttribute("height", rowHeight - rowPadding);
+            rect.setAttribute("fill", "none");
+            rect.setAttribute("stroke", chain.color);
+            rect.setAttribute("stroke-width", "2");
+            rect.id = `flow2024-${chain.name.replace(/\s+/g, '-')}`;
+            section2024.appendChild(rect);
+
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", "140");
+            text.setAttribute("y", y + rowHeight / 2);
+            text.setAttribute("text-anchor", "end");
+            text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("fill", "#333");
+            text.setAttribute("font-size", "16");
+            text.setAttribute("font-weight", "bold");
+            text.textContent = chain.name;
+            section2024.appendChild(text);
+        });
+
+        // Create legend
+        function createLegend() {
+            let legendHTML = "<h3>Blockchains</h3>";
+            blockchains2024.forEach(chain => {
+                if (chain.subChains) {
+                    chain.subChains.forEach(subChain => {
+                        legendHTML += `<div class='legend-item'><div class='legend-color' style='background-color: ${subChain.color};'></div><span>${subChain.name}</span></div>`;
+                    });
+                } else {
+                    legendHTML += `<div class='legend-item'><div class='legend-color' style='background-color: ${chain.color};'></div><span>${chain.name}</span></div>`;
+                }
+            });
+            legend.innerHTML = legendHTML;
+        }
+
+        createLegend();
+
+        function createDot(x, y, r, color) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", x);
+            circle.setAttribute("cy", y);
+            circle.setAttribute("r", r);
+            circle.setAttribute("fill", color);
+            return circle;
+        }
+
+        function animateDots(year) {
+            const flowElements = year === 2012 ? [flow2012] : blockchains2024.map(chain => document.getElementById(`flow2024-${chain.name.replace(/\s+/g, '-')}`));
+            const dotSize = year === 2012 ? 4 : 2;
+
+            flowElements.forEach((flowElement, index) => {
+                const chain = year === 2012 ? { name: "Bitcoin", color: "#ff9900", tps: 0.32 } : blockchains2024[index];
+                const transactionsPerSecond = chain.tps;
+
+                const flowWidth = parseFloat(flowElement.getAttribute("width"));
+                const flowHeight = parseFloat(flowElement.getAttribute("height"));
+                const flowX = parseFloat(flowElement.getAttribute("x"));
+                const flowY = parseFloat(flowElement.getAttribute("y"));
+
+                let accumulatedFraction = 0;
+
+                function createDotIfNeeded() {
+                    accumulatedFraction += transactionsPerSecond / 60; // Assuming 60fps
+                    if (accumulatedFraction >= 1) {
+                        const wholeDots = Math.floor(accumulatedFraction);
+                        accumulatedFraction -= wholeDots;
+
+                        for (let i = 0; i < wholeDots; i++) {
+                            const x = flowX;
+                            let y;
+                            if (year === 2012) {
+                                y = flowY + flowHeight / 2; // Center of the row for 2012
+                            } else {
+                                y = flowY + Math.random() * flowHeight;
+                            }
+                            let color = chain.color;
+                            if (chain.subChains) {
+                                const rand = Math.random();
+                                color = rand < chain.subChains[0].percentage ? chain.subChains[0].color : chain.subChains[1].color;
+                            }
+                            const dot = createDot(x, y, dotSize, color);
+                            flowElement.parentNode.appendChild(dot);
+
+                            const duration = 5000; // 5 seconds to cross the flow area
+                            const startTime = Date.now();
+
+                            function moveDot() {
+                                const elapsedTime = Date.now() - startTime;
+                                const progress = elapsedTime / duration;
+
+                                if (progress < 1) {
+                                    const newX = flowX + progress * flowWidth;
+                                    dot.setAttribute("cx", newX);
+                                    requestAnimationFrame(moveDot);
+                                } else {
+                                    dot.remove();
+                                }
+                            }
+
+                            requestAnimationFrame(moveDot);
+                        }
+                    }
+                }
+
+                setInterval(createDotIfNeeded, 1000 / 60); // Run every frame
+            });
+        }
+
+        animateDots(2012);
+        animateDots(2024);
+    </script>
+</body>
+</html>
